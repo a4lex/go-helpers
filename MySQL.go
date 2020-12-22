@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	//
-	_ "../go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // MySQL is wraper for sql.DB
@@ -150,6 +151,28 @@ func (mysql MySQL) DBSelectList(query string, args ...interface{}) (result []map
 	return
 }
 
+// InitQueryQueue - create thread for queue
+func (mysql MySQL) InitQueryQueue(wg *sync.WaitGroup) (queryChannel chan string) {
+
+	queryChannel = make(chan string, 1)
+	go mysql.queryQueue(wg, queryChannel)
+	return
+}
+
+func (mysql MySQL) queryQueue(wg *sync.WaitGroup, queryChannel chan string) {
+	funcName := "queryQueue"
+	start := time.Now().Unix()
+	mysql.logger.Printf(FUNC, "Start: %s", funcName)
+
+	wg.Add(1)
+	for query := range queryChannel {
+		mysql.DBQuery(query)
+	}
+	wg.Done()
+
+	mysql.logger.Printf(FUNC, "Stop: %s, diration: %d sec", funcName, time.Now().Unix()-start)
+}
+
 func convertValueToString(val interface{}) string {
 	if b, ok := val.([]byte); ok {
 		return fmt.Sprintf("%s", string(b))
@@ -174,27 +197,4 @@ func convertValueToString(val interface{}) string {
 // 		params += "?, "
 // 	}
 // 	return strings.TrimRight(params, ", ")
-// }
-
-// // InitQueryQueue - create thread for queue
-// func (mysql MySQL) InitQueryQueue() (queryChannel chan string) {
-
-// 	// wg.Add(1)
-// 	queryChannel = make(chan string, 1)
-// 	go mysql.queryQueue(queryChannel)
-
-// 	return
-// }
-
-// func (mysql MySQL) queryQueue(queryChannel chan string) {
-
-// 	funcName := "queryQueue"
-// 	start := time.Now().Unix()
-// 	mysql.logger.Printf(FUNC, "Start: %s", funcName)
-
-// 	for query := range queryChannel {
-// 		mysql.DBQuery(query)
-// 	}
-
-// 	mysql.logger.Printf(FUNC, "Stop: %s, diration: %d sec", funcName, time.Now().Unix()-start)
 // }
