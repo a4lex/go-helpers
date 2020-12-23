@@ -152,23 +152,24 @@ func (mysql MySQL) DBSelectList(query string, args ...interface{}) (result []map
 }
 
 // InitQueryQueue - create thread for queue
-func (mysql MySQL) InitQueryQueue(wg *sync.WaitGroup) (queryChannel chan string) {
+func (mysql MySQL) InitQueryQueue(wgMTQueue *sync.WaitGroup) (chanQuery chan string) {
+	chanQuery = make(chan string, 1)
 
-	queryChannel = make(chan string, 1)
-	go mysql.queryQueue(wg, queryChannel)
+	wgMTQueue.Add(1)
+	go mysql.queryQueue(wgMTQueue, chanQuery)
 	return
 }
 
-func (mysql MySQL) queryQueue(wg *sync.WaitGroup, queryChannel chan string) {
+func (mysql MySQL) queryQueue(wg *sync.WaitGroup, chanQuery chan string) {
+	defer wg.Done()
+
 	funcName := "queryQueue"
 	start := time.Now().Unix()
 	mysql.logger.Printf(FUNC, "Start: %s", funcName)
 
-	wg.Add(1)
-	for query := range queryChannel {
+	for query := range chanQuery {
 		mysql.DBQuery(query)
 	}
-	wg.Done()
 
 	mysql.logger.Printf(FUNC, "Stop: %s, diration: %d sec", funcName, time.Now().Unix()-start)
 }
