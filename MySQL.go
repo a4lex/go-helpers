@@ -17,6 +17,11 @@ type MySQL struct {
 	logger *MyLogger
 }
 
+type Query struct {
+	Query string
+	Args  []interface{}
+}
+
 // DBConnect - open connection to database
 func DBConnect(logger *MyLogger, dbHost, dbUser, dbPass, dbName, dsnParams string, dbMaxIdle, dbMaxOpen int) (MySQL, error) {
 
@@ -152,15 +157,15 @@ func (mysql MySQL) DBSelectList(query string, args ...interface{}) (result []map
 }
 
 // InitQueryQueue - create thread for queue
-func (mysql MySQL) InitQueryQueue(wgMTQueue *sync.WaitGroup) (chanQuery chan string) {
-	chanQuery = make(chan string, 1)
+func (mysql MySQL) InitQueryQueue(wgMTQueue *sync.WaitGroup) (chanQuery chan Query) {
+	chanQuery = make(chan Query, 1)
 
 	wgMTQueue.Add(1)
 	go mysql.queryQueue(wgMTQueue, chanQuery)
 	return
 }
 
-func (mysql MySQL) queryQueue(wg *sync.WaitGroup, chanQuery chan string) {
+func (mysql MySQL) queryQueue(wg *sync.WaitGroup, chanQuery chan Query) {
 	defer wg.Done()
 
 	funcName := "queryQueue"
@@ -168,7 +173,7 @@ func (mysql MySQL) queryQueue(wg *sync.WaitGroup, chanQuery chan string) {
 	mysql.logger.Printf(FUNC, "Start: %s", funcName)
 
 	for query := range chanQuery {
-		mysql.DBQuery(query)
+		mysql.DBQuery(query.Query, query.Args...)
 	}
 
 	mysql.logger.Printf(FUNC, "Stop: %s, diration: %d sec", funcName, time.Now().Unix()-start)
@@ -191,11 +196,3 @@ func convertValueToString(val interface{}) string {
 	// }
 	// return fmt.Sprintf("%s", v)
 }
-
-// // GenParams - generate given count of params
-// func (mysql MySQL) GenParams(count int) (params string) {
-// 	for i := 0; i < count; i++ {
-// 		params += "?, "
-// 	}
-// 	return strings.TrimRight(params, ", ")
-// }
