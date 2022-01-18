@@ -1,3 +1,5 @@
+github.com/a4lex/go-telnet v0.0.0-20180329124119-c3b780dc415b h1:sljSWeigMd8kTCWEIR3pW1mgJqopU6avK8s3/Cipuqs=
+github.com/a4lex/go-telnet v0.0.0-20180329124119-c3b780dc415b/go.mod h1:2FuJ37V2hVG8VTWa30KxxccsJ7A5WqeogeamMfQHfdc=
 github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
